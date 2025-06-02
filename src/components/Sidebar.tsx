@@ -18,6 +18,7 @@ const navigation = [
   { name: "Network Map", href: "/map", icon: Map },
   { name: "Alerts", href: "/alerts", icon: Bell },
   { name: "Analytics", href: "/analytics", icon: ChartBar },
+  { name: "Notifications", href: "/notifications", icon: Bell },
 ];
 
 const Sidebar = () => {

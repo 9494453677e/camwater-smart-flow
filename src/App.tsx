@@ -12,6 +12,9 @@ import Alerts from "./pages/Alerts";
 import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import GenerateReports from "./pages/GenerateReports";
+import AddIncident from "./pages/AddIncident";
+import Notifications from "./pages/Notifications";
 import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
@@ -31,6 +34,9 @@ const App = () => (
             <Route path="map" element={<NetworkMap />} />
             <Route path="alerts" element={<Alerts />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="generate-reports" element={<GenerateReports />} />
+            <Route path="add-incident" element={<AddIncident />} />
+            <Route path="notifications" element={<Notifications />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

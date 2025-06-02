@@ -1,10 +1,14 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Download, Calendar } from "lucide-react";
+import { Download, Calendar, Filter } from "lucide-react";
 
 const Analytics = () => {
+  const [dateRange, setDateRange] = useState("6months");
+  const [selectedMetric, setSelectedMetric] = useState("consumption");
+
   const monthlyData = [
     { month: "Jan", consumption: 45600, pressure: 4.1, incidents: 12 },
     { month: "Feb", consumption: 43200, pressure: 4.2, incidents: 8 },
@@ -22,6 +26,51 @@ const Analytics = () => {
     { name: "Bamenda West", value: 8, color: "#8b5cf6" },
   ];
 
+  const dateRanges = [
+    { id: "1month", name: "Last Month" },
+    { id: "3months", name: "Last 3 Months" },
+    { id: "6months", name: "Last 6 Months" },
+    { id: "1year", name: "Last Year" },
+    { id: "custom", name: "Custom Range" }
+  ];
+
+  const metrics = [
+    { id: "consumption", name: "Water Consumption" },
+    { id: "pressure", name: "System Pressure" },
+    { id: "incidents", name: "Incidents" }
+  ];
+
+  const handleExportReport = () => {
+    const reportData = {
+      dateRange,
+      selectedMetric,
+      generatedAt: new Date().toISOString(),
+      data: monthlyData
+    };
+    
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics-report-${dateRange}-${selectedMetric}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getFilteredData = () => {
+    // Simulate filtering based on date range
+    switch (dateRange) {
+      case "1month":
+        return monthlyData.slice(-1);
+      case "3months":
+        return monthlyData.slice(-3);
+      case "6months":
+        return monthlyData;
+      default:
+        return monthlyData;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -30,11 +79,23 @@ const Analytics = () => {
           <p className="text-slate-600 mt-1">Comprehensive water distribution analytics and insights</p>
         </div>
         <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-slate-600" />
+            <select 
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {dateRanges.map((range) => (
+                <option key={range.id} value={range.id}>{range.name}</option>
+              ))}
+            </select>
+          </div>
           <Button variant="outline">
             <Calendar className="w-4 h-4 mr-2" />
             Date Range
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleExportReport} className="bg-blue-600 hover:bg-blue-700">
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
@@ -47,7 +108,7 @@ const Analytics = () => {
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600">324,200</div>
               <div className="text-sm text-slate-600 mt-1">Total Consumption (L)</div>
-              <div className="text-xs text-green-600 mt-2">+8.2% from last month</div>
+              <div className="text-xs text-green-600 mt-2">+8.2% from last period</div>
             </div>
           </CardContent>
         </Card>
@@ -77,21 +138,38 @@ const Analytics = () => {
             <div className="text-center">
               <div className="text-3xl font-bold text-orange-600">68</div>
               <div className="text-sm text-slate-600 mt-1">Incidents Resolved</div>
-              <div className="text-xs text-blue-600 mt-2">This month</div>
+              <div className="text-xs text-blue-600 mt-2">This period</div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      <div className="mb-4">
+        <div className="flex gap-2">
+          {metrics.map((metric) => (
+            <Button
+              key={metric.id}
+              variant={selectedMetric === metric.id ? "default" : "outline"}
+              onClick={() => setSelectedMetric(metric.id)}
+              size="sm"
+            >
+              {metric.name}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Water Consumption Trends</CardTitle>
+            <CardTitle>
+              {metrics.find(m => m.id === selectedMetric)?.name} Trends ({dateRanges.find(r => r.id === dateRange)?.name})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
+                <BarChart data={getFilteredData()}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="month" stroke="#64748b" />
                   <YAxis stroke="#64748b" />
@@ -102,7 +180,7 @@ const Analytics = () => {
                       borderRadius: "8px"
                     }} 
                   />
-                  <Bar dataKey="consumption" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={selectedMetric} fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -139,7 +217,7 @@ const Analytics = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Performance Summary</CardTitle>
+          <CardTitle>Performance Summary</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -154,7 +232,7 @@ const Analytics = () => {
                 </tr>
               </thead>
               <tbody>
-                {monthlyData.map((data) => (
+                {getFilteredData().map((data) => (
                   <tr key={data.month} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="py-3 px-4 font-medium">{data.month} 2024</td>
                     <td className="py-3 px-4">{data.consumption.toLocaleString()}</td>

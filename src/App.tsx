@@ -8,7 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Sensors from "./pages/Sensors";
 import Reports from "./pages/Reports";
 import NetworkMap from "./pages/NetworkMap";
-import Alerts from "./pages/Alerts";
+import AlertsEnhanced from "./pages/AlertsEnhanced";
 import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -32,7 +32,7 @@ const App = () => (
             <Route path="sensors" element={<Sensors />} />
             <Route path="reports" element={<Reports />} />
             <Route path="map" element={<NetworkMap />} />
-            <Route path="alerts" element={<Alerts />} />
+            <Route path="alerts" element={<AlertsEnhanced />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="generate-reports" element={<GenerateReports />} />
             <Route path="add-incident" element={<AddIncident />} />

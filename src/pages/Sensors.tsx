@@ -1,18 +1,51 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Sensors = () => {
-  const sensors = [
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  const [sensors, setSensors] = useState([
     { id: "S001", type: "Flow Meter", location: "Douala Central - Main Line", status: "active", lastReading: "856 L/min", battery: "98%" },
     { id: "S002", type: "Pressure Sensor", location: "Douala Central - Junction A", status: "active", lastReading: "4.1 bar", battery: "87%" },
     { id: "S003", type: "Leak Detector", location: "Yaoundé North - Sector 3", status: "warning", lastReading: "Anomaly", battery: "76%" },
     { id: "S004", type: "Flow Meter", location: "Bamenda West - Distribution Hub", status: "active", lastReading: "445 L/min", battery: "92%" },
     { id: "S005", type: "Pressure Sensor", location: "Yaoundé Center - Main Valve", status: "offline", lastReading: "N/A", battery: "12%" },
-  ];
+  ]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Simulate API call
+    setTimeout(() => {
+      // Update sensor readings with new simulated values
+      setSensors(prev => prev.map(sensor => ({
+        ...sensor,
+        lastReading: sensor.status === "offline" ? "N/A" : 
+          sensor.type === "Flow Meter" ? `${Math.floor(Math.random() * 500) + 400} L/min` :
+          sensor.type === "Pressure Sensor" ? `${(Math.random() * 2 + 3).toFixed(1)} bar` :
+          sensor.status === "warning" ? "Anomaly" : "Normal",
+        battery: sensor.status === "offline" ? sensor.battery : `${Math.floor(Math.random() * 30) + 70}%`
+      })));
+      setIsRefreshing(false);
+      toast({
+        title: "Data Refreshed",
+        description: "Sensor data has been updated successfully.",
+      });
+    }, 1500);
+  };
+
+  const filteredSensors = sensors.filter(sensor =>
+    sensor.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sensor.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sensor.location.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -30,22 +63,28 @@ const Sensors = () => {
           <h1 className="text-3xl font-bold text-slate-800">Sensor Network</h1>
           <p className="text-slate-600 mt-1">Real-time IoT sensor monitoring and management</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh Data
+        <Button 
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Active Sensors</CardTitle>
+            <CardTitle>Active Sensors ({filteredSensors.length})</CardTitle>
             <div className="flex items-center gap-4">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
                 <Input 
                   placeholder="Search sensors..." 
                   className="pl-10 w-64"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
@@ -65,8 +104,8 @@ const Sensors = () => {
                 </tr>
               </thead>
               <tbody>
-                {sensors.map((sensor) => (
-                  <tr key={sensor.id} className="border-b border-slate-100 hover:bg-slate-50">
+                {filteredSensors.map((sensor) => (
+                  <tr key={sensor.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                     <td className="py-4 px-4 font-mono text-sm">{sensor.id}</td>
                     <td className="py-4 px-4">{sensor.type}</td>
                     <td className="py-4 px-4 text-sm">{sensor.location}</td>
@@ -92,6 +131,11 @@ const Sensors = () => {
               </tbody>
             </table>
           </div>
+          {filteredSensors.length === 0 && (
+            <div className="text-center py-8 text-slate-500">
+              No sensors found matching your search criteria.
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

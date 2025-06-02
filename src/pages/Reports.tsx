@@ -3,14 +3,71 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const Reports = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const reports = [
     { id: 1, title: "Leak Detection - Yaoundé North", type: "incident", date: "2024-01-15", status: "pending", reporter: "Tech Team Alpha" },
     { id: 2, title: "Monthly Usage Summary - December", type: "monthly", date: "2024-01-01", status: "completed", reporter: "System Auto" },
     { id: 3, title: "Pressure Anomaly - Douala Port", type: "incident", date: "2024-01-12", status: "resolved", reporter: "Field Tech 02" },
     { id: 4, title: "Sensor Calibration Report", type: "maintenance", date: "2024-01-10", status: "completed", reporter: "Maintenance Team" },
   ];
+
+  const handleExportAll = () => {
+    const csvData = [
+      "ID,Title,Type,Date,Status,Reporter",
+      ...reports.map(report => 
+        `${report.id},"${report.title}",${report.type},${report.date},${report.status},"${report.reporter}"`
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `all-reports-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Complete",
+      description: "All reports have been exported successfully.",
+    });
+  };
+
+  const handleViewDetails = (report: any) => {
+    toast({
+      title: `Report Details: ${report.title}`,
+      description: `Status: ${report.status} | Reporter: ${report.reporter} | Date: ${report.date}`,
+    });
+  };
+
+  const handleExportSingle = (report: any) => {
+    const reportData = `Report Details
+Title: ${report.title}
+Type: ${report.type}
+Date: ${report.date}
+Status: ${report.status}
+Reporter: ${report.reporter}
+Generated: ${new Date().toLocaleString()}`;
+
+    const blob = new Blob([reportData], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report-${report.id}-${report.title.replace(/[^a-z0-9]/gi, '_')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Report Exported",
+      description: `${report.title} has been exported successfully.`,
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -38,11 +95,14 @@ const Reports = () => {
           <p className="text-slate-600 mt-1">Manage incident reports and generate system analytics</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportAll}>
             <Download className="w-4 h-4 mr-2" />
             Export All
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            onClick={() => navigate('/generate-reports')}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Report
           </Button>
@@ -117,8 +177,18 @@ const Reports = () => {
                   <span>{report.date}</span>
                 </div>
                 <div className="mt-3 flex gap-2">
-                  <Button size="sm" variant="outline">View Details</Button>
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleViewDetails(report)}
+                  >
+                    View Details
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleExportSingle(report)}
+                  >
                     <Download className="w-3 h-3 mr-1" />
                     Export
                   </Button>
